@@ -1,0 +1,95 @@
+- content_for :title, "#{@app.name} · Events"
+
+= link_to "← Apps", synchify.apps_path, class: "back-link"
+
+.page-header
+  .page-header__title= @app.name
+  %p.page-header__subtitle
+    %code= @app.app_code
+
+%nav.tabs
+  = link_to "Overview", synchify.app_path(@app.app_code), class: "tab"
+  = link_to "Events",   synchify.app_events_path(@app.app_code), class: "tab tab--active"
+  = link_to "Monitor",  synchify.app_monitor_path(@app.app_code), class: "tab"
+
+.event-section
+  .event-section__title
+    Incoming
+    %span.table-wrap__count= @handle_events.size
+  - if @handle_events.any?
+    .event-cards
+      - @handle_events.each do |event_name, definition|
+        - config = @incoming_configs[event_name]
+        .event-card
+          .event-card__info
+            %code= event_name
+            - if definition.description
+              %p.event-card__desc= definition.description
+          - if config
+            %span{class: "badge badge--#{config.state}", style: "flex-shrink:0"}= config.state
+          - else
+            %span.badge.badge--unsynced{style: "flex-shrink:0"} not synced
+          - if config&.active?
+            = form_with url: synchify.app_update_event_path(@app.app_code, config.id), method: :patch, local: true do |f|
+              = f.hidden_field :state, value: "paused"
+              %button.toggle-switch.toggle-switch--on{type: "submit", title: "Click to disable"}
+                .toggle-switch__track
+                  .toggle-switch__thumb
+          - elsif config
+            = form_with url: synchify.app_update_event_path(@app.app_code, config.id), method: :patch, local: true do |f|
+              = f.hidden_field :state, value: "active"
+              %button.toggle-switch.toggle-switch--off{type: "submit", title: "Click to enable"}
+                .toggle-switch__track
+                  .toggle-switch__thumb
+          - else
+            = form_with url: synchify.app_toggle_event_path(@app.app_code), method: :patch, local: true do |f|
+              = f.hidden_field :event_name, value: event_name
+              = f.hidden_field :direction, value: "incoming"
+              = f.hidden_field :state, value: "active"
+              %button.toggle-switch.toggle-switch--off{type: "submit", title: "Click to enable"}
+                .toggle-switch__track
+                  .toggle-switch__thumb
+  - else
+    .empty
+      .empty__text No incoming events registered
+
+.event-section
+  .event-section__title
+    Outgoing
+    %span.table-wrap__count= @payload_events.size
+  - if @payload_events.any?
+    .event-cards
+      - @payload_events.each do |event_name, definition|
+        - config = @outgoing_configs[event_name]
+        .event-card
+          .event-card__info
+            %code= event_name
+            - if definition.description
+              %p.event-card__desc= definition.description
+          - if config
+            %span{class: "badge badge--#{config.state}", style: "flex-shrink:0"}= config.state
+          - else
+            %span.badge.badge--unsynced{style: "flex-shrink:0"} not synced
+          - if config&.active?
+            = form_with url: synchify.app_update_event_path(@app.app_code, config.id), method: :patch, local: true do |f|
+              = f.hidden_field :state, value: "paused"
+              %button.toggle-switch.toggle-switch--on{type: "submit", title: "Click to disable"}
+                .toggle-switch__track
+                  .toggle-switch__thumb
+          - elsif config
+            = form_with url: synchify.app_update_event_path(@app.app_code, config.id), method: :patch, local: true do |f|
+              = f.hidden_field :state, value: "active"
+              %button.toggle-switch.toggle-switch--off{type: "submit", title: "Click to enable"}
+                .toggle-switch__track
+                  .toggle-switch__thumb
+          - else
+            = form_with url: synchify.app_toggle_event_path(@app.app_code), method: :patch, local: true do |f|
+              = f.hidden_field :event_name, value: event_name
+              = f.hidden_field :direction, value: "outgoing"
+              = f.hidden_field :state, value: "active"
+              %button.toggle-switch.toggle-switch--off{type: "submit", title: "Click to enable"}
+                .toggle-switch__track
+                  .toggle-switch__thumb
+  - else
+    .empty
+      .empty__text No outgoing events registered

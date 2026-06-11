@@ -1,0 +1,54 @@
+- content_for :title, "Overview"
+
+.page-header
+  .page-header__title System Overview
+  %p.page-header__subtitle Configuration and status for this Synchify instance
+
+.grid-3
+  .stat-card
+    .stat-card__label Apps
+    .stat-card__value= Synchify::App.count
+  .stat-card
+    .stat-card__label Pending Requests
+    .stat-card__value= Synchify::ConnectionRequest.pending.count
+  .stat-card
+    .stat-card__label Event Configs
+    .stat-card__value= Synchify::EventConfig.count
+
+.kv-block
+  .kv-block__header Identity
+  .kv-block__row
+    .kv-block__key App Name
+    .kv-block__val= @config.app_name.presence || %(<span style="color:#9ca3af">not set</span>).html_safe
+  .kv-block__row
+    .kv-block__key App Code
+    .kv-block__val
+      %code= @config.app_code.presence || "not set"
+
+.kv-block
+  .kv-block__header Handshake
+  .kv-block__row
+    .kv-block__key Connect Info
+    .kv-block__val
+      %p{style: "font-size:12px;color:var(--text-secondary);margin-bottom:6px;"} Copy and share with the remote app — paste directly into their "Connect New App" form.
+      .copy-field
+        %input{type: "text", value: "#{@handshake_url}?key=#{@request_key}", readonly: true, id: "connect-info"}
+        %button.copy-field__btn{onclick: "synchifyCopy('connect-info', this)", type: "button"} Copy
+  .kv-block__row{style: "background:#fafbfc"}
+    .kv-block__key{style: "color:var(--text-muted)"} Connect URL
+    .kv-block__val{style: "font-size:12px;font-family:var(--mono);color:var(--text-secondary);word-break:break-all"}= @handshake_url
+  .kv-block__row{style: "background:#fafbfc"}
+    .kv-block__key{style: "color:var(--text-muted)"} Connect Key
+    .kv-block__val{style: "font-size:12px;font-family:var(--mono);color:var(--text-secondary)"}= @request_key
+
+- if Rails.env.development?
+  .kv-block{style: "border-color:#fca5a5;margin-top:4px"}
+    .kv-block__header{style: "color:#dc2626;background:#fff5f5"} Danger Zone · Development Only
+    .kv-block__row
+      .kv-block__key Reset Database
+      .kv-block__val
+        %p{style: "font-size:12px;color:var(--text-secondary);margin-bottom:10px"} Permanently deletes all Synchify records: apps, connections, event configs, and logs.
+        = button_to "Reset Synchify Database", synchify.reset_settings_path,
+            method: :delete,
+            class: "btn btn--danger",
+            form: { onsubmit: "return confirm('This will permanently delete ALL Synchify data. This cannot be undone. Continue?')" }

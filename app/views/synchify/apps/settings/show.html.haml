@@ -1,0 +1,52 @@
+- content_for :title, "#{@app.name} · Settings"
+
+= link_to "← Apps", synchify.apps_path, class: "back-link"
+
+.page-header
+  .page-header__title= @app.name
+  %p.page-header__subtitle
+    %code= @app.app_code
+
+%nav.tabs
+  = link_to "Overview", synchify.app_path(@app.app_code), class: "tab"
+  = link_to "Events",   synchify.app_events_path(@app.app_code), class: "tab"
+  = link_to "Monitor",  synchify.app_monitor_path(@app.app_code), class: "tab"
+
+- synced_names = @incoming_configs.map(&:event_name).to_set
+- unsynced = @registered_events.reject { |name, _| synced_names.include?(name) }
+
+.table-wrap
+  .table-wrap__header
+    %span.table-wrap__title Incoming Event Configs
+    %span.table-wrap__count= @incoming_configs.size
+  %table
+    %thead
+      %tr
+        %th Event
+        %th Description
+        %th State
+        %th Action
+    %tbody
+      - @incoming_configs.each do |config|
+        - event_class = @registered_events[config.event_name]
+        %tr
+          %td
+            %code{style: "font-size:11px"}= config.event_name
+          %td{style: "color:var(--text-secondary);font-size:12px"}= event_class&.description || "—"
+          %td
+            %span{class: "badge badge--#{config.state}"}= config.state
+          %td
+            = form_with url: synchify.app_update_handle_event_path(@app.app_code, config.id), method: :patch, local: true, class: "state-form" do |f|
+              = f.select :state, Synchify::EventConfig.states.keys, { selected: config.state }
+              = f.submit "Save", class: "btn btn--primary"
+      - unsynced.each do |name, event_class|
+        %tr{style: "opacity:0.6"}
+          %td
+            %code{style: "font-size:11px"}= name
+          %td{style: "color:var(--text-secondary);font-size:12px"}= event_class&.description || "—"
+          %td
+            %span.badge.badge--unsynced not synced
+          %td{style: "color:var(--text-muted);font-size:12px"} —
+    - if @incoming_configs.empty? && unsynced.empty?
+      .empty
+        .empty__text No incoming events registered

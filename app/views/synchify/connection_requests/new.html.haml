@@ -1,0 +1,48 @@
+- content_for :title, "Connect New App"
+- content_for :head do
+  :css
+    .main__content { max-width: none; }
+
+= link_to "← Back", synchify.root_path, class: "back-link"
+
+.page-header
+  .page-header__title Connect New App
+  %p.page-header__subtitle Connect this app to another Synchify-enabled app
+
+- if @error
+  .flash.flash--alert= @error
+
+.card
+  .card__header
+    %span.card__title Connect to App
+  .card__body
+    %p{style: "font-size:13px;color:var(--text-secondary);margin-bottom:20px;line-height:1.5"}
+      Copy the
+      %strong Connect Info
+      from the remote app's Synchify Overview page and paste it below.
+
+    = form_with url: synchify.connection_requests_path, method: :post, local: true do |f|
+      %div{style: "display:flex;flex-direction:column;gap:16px"}
+
+        %div
+          %label{style: "display:block;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px"} Connect Info
+          = f.text_field :connect_info, placeholder: "Paste the remote app's Connect Info here", required: true, style: "width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:var(--mono);outline:none;"
+          %p{style: "font-size:11px;color:var(--text-muted);margin-top:4px"} Found on the remote app's Overview page under "Connect Info"
+
+        %hr.divider
+
+        .kv-block{style: "margin-bottom:0"}
+          .kv-block__header This App (sent automatically)
+          .kv-block__row
+            .kv-block__key App Name
+            .kv-block__val= @config.app_name
+          .kv-block__row
+            .kv-block__key App Code
+            .kv-block__val
+              %code= @config.app_code
+          .kv-block__row
+            .kv-block__key Callback URL
+            .kv-block__val{style: "font-size:11px;font-family:var(--mono);word-break:break-all;color:var(--text-secondary)"}= @connect_url
+
+        %div{style: "margin-top:8px"}
+          = f.submit "Request App Connection", class: "btn btn--primary", style: "padding:8px 20px;font-size:13px"

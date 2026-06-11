@@ -1,0 +1,26 @@
+Synchify.configure do |config|
+  # Identity of this Rails app (used in handshake payloads)
+  config.app_name     = "<%= Rails.application.class.module_parent_name %>"
+  config.app_code     = "<%= Rails.application.class.module_parent_name.underscore %>"
+
+  # Secret key for HMAC signing and verify_key encryption
+  config.secret_key   = ENV["SYNCHIFY_SECRET_KEY"]
+
+  # UI authentication — lambda runs in controller context (current_user, redirect_to, etc. available)
+  # config.authenticate_with = -> { redirect_to root_path, alert: "Unauthorized" unless current_user&.admin? }
+
+  # --- Incoming events (this app receives from others) ---
+  # Handler classes live in app/synchify/handlers/ — block returns the class; engine calls klass.new(payload).handle
+  # Class must define: self.params_schema, self.response_schema — optional: self.description
+  #
+  # config.handle_event "user.created" do
+  #   Users::CreatedHandler
+  # end
+
+  # --- Outgoing events (this app sends to others) ---
+  # Payload classes live in app/synchify/payloads/ — block returns the class; define self.schema for OpenAPI
+  #
+  # config.payload_event "payment.completed" do
+  #   Payments::CompletedPayload
+  # end
+end

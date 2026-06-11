@@ -1,0 +1,67 @@
+- content_for :title, "#{@app.name} · Monitor"
+
+= link_to "← Apps", synchify.apps_path, class: "back-link"
+
+.page-header
+  .page-header__title= @app.name
+  %p.page-header__subtitle
+    %code= @app.app_code
+
+%nav.tabs
+  = link_to "Overview", synchify.app_path(@app.app_code), class: "tab"
+  = link_to "Events",   synchify.app_events_path(@app.app_code), class: "tab"
+  = link_to "Monitor",  synchify.app_monitor_path(@app.app_code), class: "tab tab--active"
+
+.filter-bar
+  = form_with url: synchify.app_monitor_path(@app.app_code), method: :get, local: true do |f|
+    .filter-group
+      = f.label :direction, "Direction"
+      = f.select :direction, [["All", ""], ["Incoming", "incoming"], ["Outgoing", "outgoing"]], { selected: params[:direction] }, { class: "filter-select" }
+    .filter-group
+      = f.label :event_name, "Event Name"
+      = f.select :event_name, [["All", ""]] + @event_names.map { |n| [n, n] }, { selected: params[:event_name] }, { class: "filter-select" }
+    .filter-group{style: "flex-direction:row;align-items:flex-end;gap:8px"}
+      = f.submit "Filter", class: "btn btn--primary"
+      - if params[:direction].present? || params[:event_name].present?
+        = link_to "Clear", synchify.app_monitor_path(@app.app_code), class: "btn btn--ghost"
+
+.table-wrap
+  .table-wrap__header
+    %span.table-wrap__title Event Logs
+    %span.table-wrap__count= @logs.size
+  - if @logs.any?
+    %table
+      %thead
+        %tr
+          %th Direction
+          %th Event
+          %th Status
+          %th Event ID
+          %th Request ID
+          %th Time
+          %th Payload
+      %tbody
+        - @logs.each do |log|
+          %tr
+            %td
+              %span{class: "badge badge--#{log.direction}"}= log.direction
+            %td
+              %code{style: "font-size:11px"}= log.event_name
+            %td
+              - if log.status_code
+                %span{class: "status-code #{status_code_class(log.status_code)}"}= log.status_code
+              - else
+                %span{style: "color:var(--text-muted)"} —
+            %td{style: "font-family:var(--mono);font-size:11px;color:var(--text-muted)"}= log.event_id&.truncate(16) || "—"
+            %td{style: "font-family:var(--mono);font-size:11px;color:var(--text-muted)"}= log.request_id&.truncate(16) || "—"
+            %td{style: "font-size:11px;color:var(--text-muted);white-space:nowrap"}= log.created_at.strftime("%b %d %H:%M:%S")
+            %td
+              - if log.payload.present?
+                %details.payload-wrap
+                  %summary View
+                  %pre= JSON.pretty_generate(log.payload)
+              - else
+                %span{style: "color:var(--text-muted)"} —
+  - else
+    .empty
+      .empty__text No event logs found

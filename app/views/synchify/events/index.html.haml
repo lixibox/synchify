@@ -1,0 +1,39 @@
+- content_for :title, "Events"
+
+.page-header
+  .page-header__title Events
+  %p.page-header__subtitle All registered incoming and outgoing event definitions for this app
+
+.event-section
+  .event-section__title
+    Incoming · Handlers
+    %span.table-wrap__count= @handle_events.size
+  - if @handle_events.any?
+    .event-cards
+      - @handle_events.each do |event_name, definition|
+        .event-card
+          .event-card__info
+            %code= event_name
+            - if definition.description
+              %p.event-card__desc= definition.description
+          %span.badge.badge--incoming incoming
+  - else
+    .empty
+      .empty__text No incoming events registered
+
+.event-section
+  .event-section__title
+    Outgoing · Payloads
+    %span.table-wrap__count= @payload_events.size
+  - if @payload_events.any?
+    .event-cards
+      - @payload_events.each do |event_name, definition|
+        .event-card
+          .event-card__info
+            %code= event_name
+            - if definition.description
+              %p.event-card__desc= definition.description
+          %span.badge.badge--outgoing outgoing
+  - else
+    .empty
+      .empty__text No outgoing events registered

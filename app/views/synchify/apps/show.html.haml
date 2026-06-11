@@ -1,0 +1,121 @@
+- content_for :title, @app.name
+
+= link_to "← Apps", synchify.apps_path, class: "back-link"
+
+.page-header{style: "display:flex;justify-content:space-between;align-items:flex-start"}
+  %div
+    .page-header__title
+      = @app.name
+      %span{class: "badge badge--#{@app.status}", style: "font-size:12px"}= @app.status
+    %p.page-header__subtitle
+      %code= @app.app_code
+  .page-header__actions{style: "margin-top:0;flex-shrink:0;display:flex;align-items:center;gap:8px"}
+    %span{style: "font-size:12px;color:var(--text-muted)"}= @app.connection_state.capitalize
+    = form_with url: synchify.toggle_connection_state_app_path(@app.app_code), method: :patch, local: true do |f|
+      - if @app.active?
+        %button.toggle-switch.toggle-switch--on{type: "submit", title: "Click to disable app"}
+          .toggle-switch__track
+            .toggle-switch__thumb
+      - else
+        %button.toggle-switch.toggle-switch--off{type: "submit", title: "Click to enable app"}
+          .toggle-switch__track
+            .toggle-switch__thumb
+
+%nav.tabs
+  = link_to "Overview", synchify.app_path(@app.app_code), class: "tab tab--active"
+  = link_to "Events",   synchify.app_events_path(@app.app_code), class: "tab"
+  = link_to "Monitor",  synchify.app_monitor_path(@app.app_code), class: "tab"
+
+.grid-2
+  .kv-block
+    .kv-block__header App Details
+    .kv-block__row
+      .kv-block__key Name
+      .kv-block__val= @app.name
+    .kv-block__row
+      .kv-block__key App Code
+      .kv-block__val
+        %code= @app.app_code
+    - if @app.app_url.present?
+      .kv-block__row
+        .kv-block__key App URL
+        .kv-block__val{style: "font-size:12px;word-break:break-all"}= @app.app_url
+    - if @app.hook_url.present?
+      .kv-block__row
+        .kv-block__key Hook URL
+        .kv-block__val{style: "font-size:12px;word-break:break-all"}= @app.hook_url
+    .kv-block__row
+      .kv-block__key Registered
+      .kv-block__val{style: "color:var(--text-secondary);font-size:12px"}= @app.created_at.strftime("%b %d, %Y · %H:%M UTC")
+    .kv-block__row{style: "align-items:flex-start;padding-top:12px;border-top:1px solid var(--border-subtle);margin-top:4px"}
+      .kv-block__key{style: "padding-top:6px"} API Key
+      .kv-block__val
+        = form_with url: synchify.app_setting_path(@app.app_code), method: :patch, local: true, style: "display:flex;gap:8px;align-items:center" do |f|
+          = f.password_field :api_key, placeholder: @app.api_key.present? ? "••••••••" : "Not set", style: "font-family:var(--mono);font-size:12px;padding:5px 8px;background:var(--bg-inset);border:1px solid var(--border);border-radius:5px;color:var(--text-primary);width:220px", autocomplete: "off"
+          = f.submit "Update", class: "btn btn--ghost", style: "font-size:12px;padding:5px 10px"
+
+  .card
+    .card__header
+      %span.card__title Registered Events
+    .card__body
+      %p.section-title Incoming
+      - if @registered_handle_events.any?
+        - @registered_handle_events.each do |event_name, definition|
+          %div{style: "display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border-subtle)"}
+            %code{style: "font-size:11px"}= event_name
+            - if definition.description.present?
+              %span{style: "font-size:11px;color:var(--text-muted)"}= definition.description
+      - else
+        %p{style: "font-size:12px;color:var(--text-muted)"} None registered.
+      %p.section-title Outgoing
+      - if @registered_payload_events.any?
+        - @registered_payload_events.each do |event_name, definition|
+          %div{style: "display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border-subtle)"}
+            %code{style: "font-size:11px"}= event_name
+            - if definition.description.present?
+              %span{style: "font-size:11px;color:var(--text-muted)"}= definition.description
+      - else
+        %p{style: "font-size:12px;color:var(--text-muted)"} None registered.
+
+- if @app.requested?
+  .card{style: "border-color:rgba(217,119,6,0.3);margin-bottom:20px"}
+    .card__header
+      %span.card__title Pending Approval
+    .card__body
+      %p{style: "font-size:13px;color:var(--text-secondary);margin-bottom:14px"} This app is awaiting approval. Review and approve or reject the connection request.
+      .actions-row
+        = form_with url: synchify.approve_app_path(@app.app_code), method: :post, local: true do |f|
+          = f.submit "Approve App", class: "btn btn--success"
+        = form_with url: synchify.reject_app_path(@app.app_code), method: :post, local: true do |f|
+          = f.submit "Reject App", class: "btn btn--danger"
+
+.table-wrap
+  .table-wrap__header
+    %span.table-wrap__title Recent Event Logs
+    = link_to "View all →", synchify.app_monitor_path(@app.app_code), class: "link", style: "font-size:12px"
+  - if @recent_logs.any?
+    %table
+      %thead
+        %tr
+          %th Direction
+          %th Event
+          %th Status
+          %th Request ID
+          %th Time
+      %tbody
+        - @recent_logs.each do |log|
+          %tr
+            %td
+              %span{class: "badge badge--#{log.direction}"}= log.direction
+            %td
+              %code{style: "font-size:11px"}= log.event_name
+            %td
+              - if log.status_code
+                %span{class: "status-code #{status_code_class(log.status_code)}"}= log.status_code
+              - else
+                %span{style: "color:var(--text-muted)"} —
+            %td{style: "font-family:var(--mono);font-size:11px;color:var(--text-muted)"}= log.request_id&.truncate(20) || "—"
+            %td{style: "font-size:12px;color:var(--text-muted);white-space:nowrap"}= log.created_at.strftime("%b %d %H:%M:%S")
+  - else
+    .empty
+      .empty__text No event logs yet
