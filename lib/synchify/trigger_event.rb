@@ -13,7 +13,7 @@ module Synchify
       definition = Synchify.configuration.payload_events[@event_name]
       raise ArgumentError, "No payload_event registered for '#{@event_name}'" unless definition
 
-      payload = definition.klass.new(@object).to_h
+      payload = definition.klass.build(@object)
 
       target_apps.each do |app|
         DeliverEventJob.perform_later(app.id, @event_name, payload)
