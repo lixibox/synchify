@@ -16,7 +16,7 @@ Synchify is configured via a Rails initializer.
 ### B. Connected Apps Management
 - **App Registry:** A registry of all external systems/apps integrated with the app.
 - **Bi-directional Capability:** By default, all connected apps support both incoming and outgoing events. Capability is managed by enabling/disabling specific events in the settings.
-- **Security & Authentication:** 
+- **Security & Authentication:**
   - **Root Security:** All management access is protected by a configured `secret_key`.
   - **Inter-App Security:** Requests between Rails apps using this engine are verified via **API Keys**.
   - **Storage:** API keys are stored in the database using encryption (e.g., `ActiveRecord::Encryption`).
@@ -182,7 +182,7 @@ Sent to `/synchify/apps/:app_code/hooks`
 All API error responses use a consistent shape:
 ```json
 {
-  "type": "https://synchify.dev/errors/invalid-signature",
+  "type": "synchify.errors.invalid-signature",
   "title": "Invalid Signature",
   "status": 401,
   "detail": "HMAC signature does not match payload."

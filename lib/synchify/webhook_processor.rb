@@ -61,7 +61,7 @@ module Synchify
     end
 
     def error(status, type_slug, title, code, detail: nil)
-      body = { type: "https://synchify.dev/errors/#{type_slug}", title: title, status: code }
+      body = { type: "synchify.errors.#{type_slug}", title: title, status: code }
       body[:detail] = detail if detail
       Result.new(status: status, body: body)
     end

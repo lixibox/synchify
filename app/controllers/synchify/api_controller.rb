@@ -6,7 +6,7 @@ module Synchify
     private
 
     def problem_details(type_slug, title, status, detail: nil)
-      { type: "https://synchify.dev/errors/#{type_slug}", title: title, status: status, detail: detail }.compact
+      { type: "synchify.errors.#{type_slug}", title: title, status: status, detail: detail }.compact
     end
   end
 end
