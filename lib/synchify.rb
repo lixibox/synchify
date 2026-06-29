@@ -1,4 +1,5 @@
 require "synchify/version"
+require "synchify/error"
 require "synchify/schema_types"
 require "synchify/params_builder"
 require "synchify/response_builder"

@@ -35,9 +35,9 @@ module Synchify
         return error(:unprocessable_entity, "invalid-payload", "Invalid Payload", 422, detail: validator.errors.join(", "))
       end
 
-      definition.klass.handle(@payload)
+      handler = definition.klass.handle(@payload)
       log!(200)
-      Result.new(status: :ok, body: { success: true })
+      Result.new(status: :ok, body: handler.response || { success: true })
     rescue => e
       log!(500, e.to_s)
       raise

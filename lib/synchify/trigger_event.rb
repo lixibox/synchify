@@ -26,7 +26,7 @@ module Synchify
       App.approved.active
          .joins(:event_configs)
          .where(
-           event_configs: {
+           synchify_event_configs: {
              direction:  "outgoing",
              event_name: @event_name,
              state:      "active"

@@ -69,12 +69,19 @@ Finds all approved, active apps with a matching outgoing `EventConfig` and enque
 ```ruby
 # app/synchify/handlers/users/created_handler.rb
 module Users
-  class CreatedHandler
-    def self.params_schema = { "type" => "object", "required" => ["id"], "properties" => { "id" => { "type" => "integer" } } }
-    def self.response_schema = { "type" => "object", "properties" => { "success" => { "type" => "boolean" } } }
+  class CreatedHandler < Synchify::HandleEvent
+    description "Creates a user from an incoming event"
 
-    def initialize(payload) = @payload = payload
-    def handle = User.create!(id: @payload["id"])
+    params do
+      required "id",       type: "integer"
+      optional "currency", type: "string"
+    end
+
+    payload_validate :currency, in: -> { Buyer::ProductOrder.currencies.keys }
+
+    def handle
+      User.create!(id: payload["id"])
+    end
   end
 end
 
@@ -88,6 +95,19 @@ module Orders
   end
 end
 ```
+
+## Payload validation
+
+Declare business-logic validations on handler classes with `payload_validate`. Runs after JSON schema checks — invalid payloads return 422 before `handle` is called.
+
+```ruby
+class Orders::CreatedHandler < Synchify::HandleEvent
+  payload_validate :currency, in: -> { Buyer::ProductOrder.currencies.keys }
+  payload_validate :status,   in: %w[pending confirmed cancelled]
+end
+```
+
+`in:` accepts a lambda (evaluated lazily at validation time) or a plain array. Fields with `nil` values skip the check — use `params` schema `required` to enforce presence.
 
 ## Security
 

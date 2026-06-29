@@ -19,6 +19,10 @@ module Synchify
     def response_schema
       klass.respond_to?(:response_schema) ? klass.response_schema : nil
     end
+
+    def payload_validations
+      klass.respond_to?(:payload_validations) ? klass.payload_validations : []
+    end
   end
 
   class Configuration

@@ -31,7 +31,7 @@ module Synchify
           builder.instance_eval(&block)
           builder.to_schema
         elsif klass_or_file.is_a?(String)
-          YAML.load_file(Rails.root.join(klass_or_file))
+          YAML.load_file(Rails.root.join("app/synchify/schemas", klass_or_file))
         elsif klass_or_file.respond_to?(:schema)
           klass_or_file.schema
         end

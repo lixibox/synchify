@@ -8,9 +8,13 @@ module Synchify
     end
 
     def show
-      @recent_logs               = @app.event_logs.recent.limit(10)
-      @registered_handle_events  = Synchify.configuration.handle_events
-      @registered_payload_events = Synchify.configuration.payload_events
+      @recent_logs = @app.event_logs.recent.limit(10)
+
+      active_incoming = @app.event_configs.where(direction: "incoming", state: "active").pluck(:event_name).to_set
+      active_outgoing = @app.event_configs.where(direction: "outgoing", state: "active").pluck(:event_name).to_set
+
+      @registered_handle_events  = Synchify.configuration.handle_events.select  { |name, _| active_incoming.include?(name) }
+      @registered_payload_events = Synchify.configuration.payload_events.select { |name, _| active_outgoing.include?(name) }
     end
 
     def toggle_connection_state

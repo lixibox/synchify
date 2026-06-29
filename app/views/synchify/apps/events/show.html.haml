@@ -1,5 +1,14 @@
 - content_for :title, "#{@app.name} · Events"
 
+:css
+  .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000 }
+  .modal-box { background:#fff;border-radius:8px;width:min(720px,94vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.18) }
+  .modal-box__header { display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border) }
+  .modal-box__title { font-weight:600;font-size:14px }
+  .modal-box__close { background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1 }
+  .modal-box__body { padding:16px 18px;overflow:auto;font-family:var(--mono);font-size:12px;white-space:pre;margin:0;flex:1 }
+  .syn-s { color:#059669 } .syn-n { color:#0284c7 } .syn-b { color:#dc2626 } .syn-k { color:#7c3aed }
+
 = link_to "← Apps", synchify.apps_path, class: "back-link"
 
 .page-header
@@ -25,6 +34,9 @@
             %code= event_name
             - if definition.description
               %p.event-card__desc= definition.description
+            - if definition.klass.respond_to?(:params_schema)
+              - schema = definition.klass.params_schema
+              %button.btn.btn--ghost{type: "button", "data-json": schema.to_json, "data-title": "#{event_name} · params_schema", onclick: "synchifyShowModal(this)", style: "font-size:11px;padding:2px 6px;margin-top:4px", disabled: schema.blank?} Schema
           - if config
             %span{class: "badge badge--#{config.state}", style: "flex-shrink:0"}= config.state
           - else
@@ -66,6 +78,9 @@
             %code= event_name
             - if definition.description
               %p.event-card__desc= definition.description
+            - if definition.klass.respond_to?(:schema)
+              - schema = definition.klass.schema
+              %button.btn.btn--ghost{type: "button", "data-json": schema.to_json, "data-title": "#{event_name} · schema", onclick: "synchifyShowModal(this)", style: "font-size:11px;padding:2px 6px;margin-top:4px", disabled: schema.blank?} Schema
           - if config
             %span{class: "badge badge--#{config.state}", style: "flex-shrink:0"}= config.state
           - else
@@ -93,3 +108,33 @@
   - else
     .empty
       .empty__text No outgoing events registered
+
+#synchify-modal.modal-overlay{style: "display:none", onclick: "if(event.target===this)synchifyCloseModal()"}
+  .modal-box
+    .modal-box__header
+      %span#synchify-modal-title.modal-box__title Schema
+      %button.modal-box__close{type: "button", onclick: "synchifyCloseModal()"} ✕
+    %pre#synchify-modal-content.modal-box__body
+
+:javascript
+  function synchifyHighlightJson(str) {
+    return str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(m) {
+      if (/^"/.test(m)) return /:$/.test(m) ? '<span class="syn-k">'+m+'</span>' : '<span class="syn-s">'+m+'</span>';
+      if (/true|false|null/.test(m)) return '<span class="syn-b">'+m+'</span>';
+      return '<span class="syn-n">'+m+'</span>';
+    });
+  }
+  function synchifyShowModal(btn) {
+    var raw = btn.getAttribute('data-json');
+    document.getElementById('synchify-modal-title').textContent = btn.getAttribute('data-title') || 'Schema';
+    var pre = document.getElementById('synchify-modal-content');
+    try {
+      var pretty = JSON.stringify(JSON.parse(raw), null, 2);
+      pre.innerHTML = synchifyHighlightJson(pretty.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+    } catch(e) { pre.textContent = raw; }
+    document.getElementById('synchify-modal').style.display = 'flex';
+  }
+  function synchifyCloseModal() {
+    document.getElementById('synchify-modal').style.display = 'none';
+  }
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') synchifyCloseModal(); });

@@ -16,19 +16,31 @@ module Synchify
     private
 
     def validate
-      schema = event_klass&.params_schema
-      return [] unless schema
-
       errs = []
 
-      (schema["required"] || []).each do |field|
-        errs << "#{field} is required" unless @payload.key?(field)
+      schema = event_klass&.params_schema
+      if schema
+        (schema["required"] || []).each do |field|
+          errs << "#{field} is required" unless @payload.key?(field)
+        end
+
+        (schema["properties"] || {}).each do |field, prop|
+          value = @payload[field]
+          next if value.nil?
+          errs << "#{field} must be #{prop['type']}" unless valid_type?(value, prop["type"])
+        end
       end
 
-      (schema["properties"] || {}).each do |field, prop|
+      (event_klass&.payload_validations || []).each do |rule|
+        field = rule[:field]
         value = @payload[field]
         next if value.nil?
-        errs << "#{field} must be #{prop['type']}" unless valid_type?(value, prop["type"])
+
+        if rule.key?(:in)
+          allowed = rule[:in]
+          allowed = allowed.call if allowed.respond_to?(:call)
+          errs << "#{field} is not included in the list" unless allowed.include?(value)
+        end
       end
 
       errs

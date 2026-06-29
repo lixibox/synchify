@@ -61,7 +61,6 @@ module Synchify
     end
 
     def find_connection_request_from_verify_key
-      debugger
       secret = Synchify.configuration.secret_key.to_s
       ConnectionRequest.active.find do |cr|
         expected = OpenSSL::HMAC.hexdigest("SHA256", secret, cr.request_key.to_s)

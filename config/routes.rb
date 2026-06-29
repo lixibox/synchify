@@ -28,6 +28,7 @@ Synchify::Engine.routes.draw do
     patch "setting",             to: "settings#update"
     get   "events",              to: "events#show",           as: :events
     get   "monitor",             to: "monitor#show",          as: :monitor
+    post  "monitor/retry/:log_id", to: "monitor#retry_log",  as: :retry_event_log
     patch "event_configs/toggle", to: "events#toggle_event",  as: :toggle_event
     patch "event_configs/:id",   to: "events#update_event",   as: :update_event
     patch "event_configs/:id/incoming", to: "settings#update_event", as: :update_handle_event

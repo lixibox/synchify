@@ -54,6 +54,7 @@
           %th Time
           %th Payload
           %th Response
+          %th
       %tbody
         - @logs.each do |log|
           %tr
@@ -82,6 +83,9 @@
                 %button.btn.btn--ghost{type: "button", "data-json": response_body, "data-title": "Response", onclick: "synchifyShowModal(this)", style: "font-size:11px;padding:2px 8px"} View
               - else
                 %span{style: "color:var(--text-muted)"} —
+            %td
+              - if log.status_code.to_i >= 500
+                = button_to "Retry", synchify.app_retry_event_log_path(@app.app_code, log.id), method: :post, class: "btn btn--ghost", style: "font-size:11px;padding:2px 8px"
   - else
     .empty
       .empty__text No event logs found
