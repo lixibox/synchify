@@ -5,7 +5,11 @@ module Synchify
     config.before_initialize do
       Rails.autoloaders.each do |autoloader|
         # Zeitwerk defaults "api_controller" → "Api::Controller"; override to keep it as "ApiController"
-        autoloader.inflector.inflect("api_controller" => "ApiController")
+        autoloader.inflector.inflect(
+          "api_controller"      => "ApiController",
+          "open_api_controller" => "OpenApiController",
+          "open_api_builder"    => "OpenApiBuilder"
+        )
       end
     end
 
